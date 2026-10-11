@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
+    "CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR": "1"
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "enabledPlugins": {},
+  "permissions": {
+    "allow": [],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./docs/_HUMANS.md)",
+      "Cd",
+      "Bash(cd *)",
+      "Bash(pushd *)",
+      "PowerShell(cd *)",
+      "PowerShell(chdir *)",
+      "PowerShell(sl *)",
+      "PowerShell(Set-Location *)",
+      "PowerShell(pushd *)",
+      "PowerShell(Push-Location *)"
+    ]
+  }
+}
