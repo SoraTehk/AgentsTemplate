@@ -18,6 +18,7 @@ edit it, remove that deny rule for the session.
 | `docs/6.TODOS.md` | Deferred work an agent must know about while editing | Before refactoring |
 | `docs/<Feature>/README.md` | One feature's contract and workings | Via the index, or the path rule below |
 | `.claude/rules/<Feature>.md` | Makes Claude read the feature doc when it touches that code | When a matching file is touched |
+| `docs/_FEATURE_TEMPLATE/` | The README and rule to copy when starting a feature | When a feature is created |
 | `.claude/settings.json` | Plugins, and permissions: what runs without asking, what is never read | At launch, only in this repository |
 | `.claude/agents/SUBAGENTS.md` | This repository's agent, used when a parent session adds it with `--add-dir`. Any filename loads; the `.md` extension, valid YAML frontmatter, and a `name` unique across the workspace are what count | In the parent session |
 | `docs/_HUMANS.md` | This file | Never, by agents |
@@ -27,6 +28,11 @@ edit it, remove that deny rule for the session.
 If a task matches no playbook in 2.INSTRUCTIONS, or needs a command or tool it doesn't list, the agent
 stops, proposes the missing lines, and continues once they're in the file. Expect this often at first;
 2.INSTRUCTIONS grows out of real gaps. Review every proposed line: that file decides what agents do.
+
+A new project starts with every command and the test framework marked *not set up yet*. That's
+deliberate: the first task that needs a build or a test makes the agent stop and propose one, so these
+get set up by the work that needs them, with you approving each line. The other defaults (tools, git
+format, conventions, test practice) suit most projects; edit any that yours decides differently.
 
 ## Where to start the agent
 

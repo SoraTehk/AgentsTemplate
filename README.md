@@ -5,21 +5,23 @@ is also read by Codex, Cursor, Copilot and other agents.
 
 Every repository gets the same setup, whether it stands alone, sits inside a parent repository, or
 contains work repositories of its own (git submodules or nested clones). Any repository can be all three
-at once, so there is one template, and the parts about containing other repositories are optional
-sections.
+at once, so there is one template, and the parts about containing other repositories are commented-out
+sections you switch on.
+
+Everything has a working default. A new project replaces two tokens, `{{PROJECT_NAME}}` and
+`{{PROJECT_GOAL}}`, and starts working; the rest fills in as the work needs it.
 
 ## Layout
 
 ```text
-AGENTS_TEMPLATE/
+AgentsTemplate/
 ├── README.md          this file (not copied)
 └── template/          copy its contents into a repository's root
     ├── AGENTS.md                    enforcement (instructions, test-first) and the docs index
     ├── CLAUDE.md                    "@AGENTS.md", so Claude Code reads the same index
     ├── .claude/
-    │   ├── settings.json            plugins and permissions; hides docs/_HUMANS.md from Claude
-    │   ├── agents/SUBAGENTS.md      this repository's agent, for parent sessions that add it
-    │   └── rules/FeatureName.md     loads a feature's doc when Claude touches that feature's code
+    │   ├── settings.json            plugins and permissions; never-cd rules; hides docs/_HUMANS.md
+    │   └── agents/SUBAGENTS.md      this repository's agent, for parent sessions that add it
     └── docs/
         ├── 1.PROJECT.md             purpose, milestones, prerequisites, layout
         ├── 2.INSTRUCTIONS.md        shell commands, the tool for each action, a playbook per task
@@ -27,51 +29,75 @@ AGENTS_TEMPLATE/
         ├── 4.TEST.md                test frameworks and layout, what each change ships with
         ├── 5.DECISIONS.md           why things are the way they are
         ├── 6.TODOS.md               deferred renames, restructures, debt
-        ├── FeatureName/README.md    one folder per feature, e.g. docs/HttpServer/, docs/Ocr/
+        ├── _FEATURE_TEMPLATE/       README and path rule to copy per feature, e.g. docs/Ocr/
         └── _HUMANS.md               for people only: how it all works, routines, Claude Code features
 ```
 
 How the files work together, where to start an agent, and the day-to-day routines are in
 [template/docs/_HUMANS.md](template/docs/_HUMANS.md). That file is copied into every repository.
 
-## Apply it
+## Start a project
 
-1. **Copy without overwriting** what the repository already has:
+1. **Copy the template** into the repository's root, without overwriting what's already there:
 
    ```sh
-   cp -rn AGENTS_TEMPLATE/template/. path/to/repo/                  # bash
+   git clone https://github.com/SoraTehk/AgentsTemplate.git
+   cp -rn AgentsTemplate/template/. path/to/repo/                     # bash
    ```
 
    ```powershell
-   robocopy AGENTS_TEMPLATE\template path\to\repo /E /XC /XN /XO     # PowerShell: skips existing files
+   robocopy AgentsTemplate\template path\to\repo /E /XC /XN /XO        # PowerShell: skips existing files
    ```
 
-2. **Have the agent fill it in.** Until 2.INSTRUCTIONS is filled in, the gate in AGENTS.md will stop the
-   agent, so say that this task is the exception. Start Claude Code in the repository and give it this prompt:
+2. **Replace the two tokens**, from the repository's root:
 
-   > This repository was just given the agent-docs template, and filling it in is the task: the
-   > "Always" rules in AGENTS.md don't apply until it's done. Fill in the `{{...}}` placeholders in
-   > AGENTS.md and docs/ from the build files, CI, configs, README and git log. Merge with any existing
-   > CLAUDE.md or docs instead of replacing them, and ask before moving content. Delete optional sections
-   > that don't apply. For each language the code uses, enable its official LSP plugin in
-   > `.claude/settings.json` (such as `clangd-lsp`, `csharp-lsp`, `pyright-lsp`, `typescript-lsp`, all
-   > `@claude-plugins-official`) and list its language server in 1.PROJECT Prerequisites. Never invent commands, versions or rules: leave
-   > `{{TODO: question}}` for anything you can't verify, then list those questions for me. Rename or delete
-   > the FeatureName examples. Fill in `.claude/agents/SUBAGENTS.md`, keeping its
-   > frontmatter valid YAML. If this repository contains work repositories, list each one, with its agent's name, in
-   > AGENTS.md "Work repositories".
+   ```sh
+   name='MyProject'; goal='One sentence: what it builds, for whom, and what it is not.'
+   grep -rlF '{{PROJECT_' AGENTS.md docs .claude --include='*.md' --exclude-dir=_FEATURE_TEMPLATE \
+     | xargs sed -i "s|{{PROJECT_NAME}}|$name|g; s|{{PROJECT_GOAL}}|$goal|g"
+   ```
 
-3. **Review 2.INSTRUCTIONS and 4.TEST line by line.** Together they decide what the agent may do and
-   when it must write tests first.
-4. **Ignore personal files** in `.gitignore`:
+   ```powershell
+   $name = 'MyProject'; $goal = 'One sentence: what it builds, for whom, and what it is not.'
+   Get-ChildItem AGENTS.md, docs, .claude -Recurse -File -Filter *.md |
+     Where-Object FullName -notmatch '_FEATURE_TEMPLATE' |
+     ForEach-Object { [IO.File]::WriteAllText($_.FullName, [IO.File]::ReadAllText($_.FullName).Replace('{{PROJECT_NAME}}', $name).Replace('{{PROJECT_GOAL}}', $goal)) }
+   ```
+
+   The PowerShell version writes UTF-8 without a byte-order mark on purpose: `Set-Content -Encoding utf8`
+   in Windows PowerShell adds one, which hides `SUBAGENTS.md`'s frontmatter and makes Claude Code skip it.
+   In the bash version, avoid `|` and `&` in the goal, or escape them.
+
+3. **Ignore personal files** in `.gitignore`:
 
    ```gitignore
    CLAUDE.local.md
    .claude/settings.local.json
    ```
 
+That's all a new project needs. Commands and the test framework start as *not set up yet*: the first task
+that needs one makes the agent stop and propose it (the gate in AGENTS.md), and you approve each line.
+
+**When it applies:**
+
+- **Repositories inside this one:** uncomment "Work repositories" in AGENTS.md and 1.PROJECT and list
+  each one. Start Claude Code with `claude --add-dir ChildA --add-dir ChildB`.
+- **Never a work repository itself:** delete `.claude/agents/SUBAGENTS.md`.
+- **Code in a language with an official LSP plugin:** enable it in `.claude/settings.json` (such as
+  `"clangd-lsp@claude-plugins-official": true`), and list its language server in 1.PROJECT Prerequisites.
+- **Adopting into an existing project:** have the agent fill in what the code already shows:
+
+  > This repository was just given the agent-docs template, and setting it up is the task: the "Always"
+  > rules in AGENTS.md don't apply until it's done. Replace every *not set up yet* and default in AGENTS.md
+  > and docs/ that the build files, CI, configs, README or git log contradict or can fill, and merge any
+  > existing CLAUDE.md or docs instead of replacing them, asking before moving content. Never invent
+  > commands, versions or rules; list what you couldn't verify as questions for me.
+
 ## Design choices, and why
 
+- **Working defaults, two tokens.** A template full of blanks either stays blank or gets filled with
+  guesses. Defaults that suit most projects, plus *not set up yet* where nothing generic fits, keep a new
+  project usable from the first prompt, and the gate turns each gap into a question when it matters.
 - **AGENTS.md enforces, docs instruct.** In Vercel's evals, a compact docs index kept in AGENTS.md
   passed 100% of tasks. The same docs packaged as a skill passed at most 79%, because agents often
   didn't think to load it. So the rules that must always hold (follow 2.INSTRUCTIONS, ask when it has
@@ -93,7 +119,7 @@ How the files work together, where to start an agent, and the day-to-day routine
 
 ## Sources
 
-- Claude Code docs: [memory and AGENTS.md](https://code.claude.com/docs/en/memory), [skills](https://code.claude.com/docs/en/skills), [settings](https://code.claude.com/docs/en/settings), [permissions](https://code.claude.com/docs/en/permissions), [monorepos and large codebases](https://code.claude.com/docs/en/large-codebases)
+- Claude Code docs: [memory and AGENTS.md](https://code.claude.com/docs/en/memory), [skills](https://code.claude.com/docs/en/skills), [settings](https://code.claude.com/docs/en/settings), [permissions](https://code.claude.com/docs/en/permissions), [monorepos and large codebases](https://code.claude.com/docs/en/large-codebases), [subagents](https://code.claude.com/docs/en/sub-agents)
 - [agents.md](https://agents.md/) and [Codex: AGENTS.md discovery](https://developers.openai.com/codex/guides/agents-md)
 - [Vercel: AGENTS.md outperforms skills in our agent evals](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)
 - [GitHub: How to write a great agents.md, lessons from over 2,500 repositories](https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/)

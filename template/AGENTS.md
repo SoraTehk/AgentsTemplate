@@ -1,12 +1,12 @@
 <!--
   AGENTS.md is the INDEX and the ENFORCEMENT layer: every line loads on every turn, for every agent.
-  Budget: ~60 lines. Detail belongs in docs/. {{...}} marks a value to fill in.
-  Never write an "@" followed by a path here: Claude Code would import that file into every turn.
-  Delete optional sections that don't apply, then delete these comments.
+  Budget: ~60 lines. Detail belongs in docs/. Replace {{PROJECT_NAME}} and {{PROJECT_GOAL}}; everything
+  else has a working default. Never write an "@" followed by a path here: Claude Code would import that
+  file into every turn.
 -->
-# {{REPOSITORY_NAME}}
+# {{PROJECT_NAME}}
 
-{{One sentence: what this repository builds, for whom, and what it is not.}}
+{{PROJECT_GOAL}}
 
 ## Always
 
@@ -19,7 +19,6 @@
 3. **Tests first.** Before changing behaviour, write the test [4.TEST](docs/4.TEST.md) calls for, run it,
    and see it fail for the reason you expect. Only then implement, until it passes. If 4.TEST exempts the
    change, say which exemption applies.
-4. {{Non-negotiable rule that no tool enforces, with its reason in a few words. Delete if none.}}
 
 ## Docs
 
@@ -36,14 +35,16 @@ Your training data is older than this code. Read the matching doc instead of rel
 
 ### Feature docs
 
-<!-- One row per docs/<Feature>/ folder. Delete the table if there are none yet. -->
+None yet.
+<!-- Replace "None yet." with a table, one row per docs/<Feature>/ folder (see docs/_FEATURE_TEMPLATE/):
 | Feature | Doc | Code |
 | --- | --- | --- |
-| {{FeatureName}} | [README](docs/{{FeatureName}}/README.md) | `{{src/FeatureName/}}` |
+| Ocr | [README](docs/Ocr/README.md) | `src/Ocr/` |
+-->
 
+<!-- Uncomment when this repository contains other repositories (git submodules or nested clones).
 ## Work repositories
 
-<!-- Optional: only if this repository contains other repositories (submodules or nested clones). -->
 Each one has its own AGENTS.md, docs/ and agent, and works on its own. If you are one of these agents,
 skip this section. Otherwise:
 
@@ -56,11 +57,12 @@ skip this section. Otherwise:
 
 | Repository | What it is | Kind | Agent | Index |
 | --- | --- | --- | --- | --- |
-| `{{Child/}}` | {{one line}} | {{git submodule / nested clone}} | `{{child-name}}` | [AGENTS.md]({{Child}}/AGENTS.md) |
+| `ChildA/` | One line on what it is | git submodule | `ChildA` | [AGENTS.md](ChildA/AGENTS.md) |
+-->
 
 ## Scope
 
 This repository stands alone: this file and `docs/` are enough to work here, even when it is cloned by
 itself. A parent repository's instructions cover only how its work repositories fit together; inside this
-repository, this file wins. In the same way, inside a work repository listed above, its own AGENTS.md
+repository, this file wins. In the same way, inside a work repository of this one, its own AGENTS.md
 wins. Stay inside this repository unless the task says otherwise.
