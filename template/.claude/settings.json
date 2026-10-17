@@ -19,6 +19,7 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./docs/_HUMANS.md)",
+      "Read(./docs/_NOTES.md)",
       "Cd",
       "Bash(cd *)",
       "Bash(pushd *)",

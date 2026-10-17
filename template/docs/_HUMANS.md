@@ -16,12 +16,14 @@ edit it, remove that deny rule for the session.
 | `docs/4.TEST.md` | How tests are written, so they can come first | Before writing code |
 | `docs/5.DECISIONS.md` | Why things are the way they are | Before reversing a choice |
 | `docs/6.TODOS.md` | Deferred work an agent must know about while editing | Before refactoring |
-| `docs/<Feature>/README.md` | One feature's contract and workings | Via the index, or the path rule below |
-| `.claude/rules/<Feature>.md` | Makes Claude read the feature doc when it touches that code | When a matching file is touched |
-| `docs/_FEATURE_TEMPLATE/` | The README and rule to copy when starting a feature | When a feature is created |
+| `docs/<Feature>/README.md` | One feature's index: its contract, workings and own docs | Via the index, or the path rule below |
+| `docs/<Feature>/N.*.md` | What one feature adds to the root doc with the same number | When its README's "Docs" table says |
+| `.claude/rules/<Feature>.md` | Makes Claude read the feature's README when it touches that code | When a matching file is touched |
+| `docs/_FEATURE_TEMPLATE/` | The README, rule and numbered docs a feature copies, by the block in 2.INSTRUCTIONS | When a feature or one of its docs is created |
 | `.claude/settings.json` | Plugins, and permissions: what runs without asking, what is never read | At launch, only in this repository |
 | `.claude/agents/SUBAGENTS.md` | This repository's agent, used when a parent session adds it with `--add-dir`. Any filename loads; the `.md` extension, valid YAML frontmatter, and a `name` unique across the workspace are what count | In the parent session |
 | `docs/_HUMANS.md` | This file | Never, by agents |
+| `docs/_NOTES.md` | Your scratchpad: ideas and to-dos nobody has agreed on yet | Never, by agents |
 
 ## The gate
 
@@ -33,6 +35,61 @@ A new project starts with every command and the test framework marked *not set u
 deliberate: the first task that needs a build or a test makes the agent stop and propose one, so these
 get set up by the work that needs them, with you approving each line. The other defaults (tools, git
 format, conventions, test practice) suit most projects; edit any that yours decides differently.
+
+## Features: the same hierarchy, one level down
+
+A feature is documented the way the repository is, so an agent finds its way the same at both levels
+(5.DECISIONS D-002):
+
+| Repository | Feature | Difference |
+| --- | --- | --- |
+| `AGENTS.md`: the index, read first | `docs/<Feature>/README.md`: the index, plus the contract | The README holds content too; AGENTS.md only rules and links |
+| `CLAUDE.md` loads AGENTS.md | `.claude/rules/<Feature>.md` loads the README | The rule loads when Claude touches the feature's files |
+| `docs/1`–`6` | `docs/<Feature>/1`–`6`, only the ones with something of their own | A feature's doc adds to the root's; the root's still applies |
+| A work repository's AGENTS.md wins inside it | Neither wins: a conflict is two instructions conflicting, so the agent stops (rule 2) | Features share one build, commands and history |
+| Contracts with other repositories, in 3.CONVENTIONS | The README's Contract: all another feature may rely on | |
+| `SUBAGENTS.md` | None: features share the session | |
+
+Features don't nest. When one outgrows its folder, split it into sibling features; when it needs its own
+build or release, make it a work repository.
+
+To start a feature, or add a numbered doc to one, the agent runs the block in 2.INSTRUCTIONS "Add or change
+a feature": it copies from `docs/_FEATURE_TEMPLATE/` and never overwrites an existing file. You can ask for it
+directly ("start a feature called Ocr, with 3.CONVENTIONS and 5.DECISIONS").
+
+## Commands in PowerShell
+
+2.INSTRUCTIONS is written for Bash. If this project's commands are PowerShell, say so in its first paragraph
+under "Shell commands", change the "Run a command from this file" row to the `PowerShell` tool (with `Bash`
+only for read-only commands of the agent's own), and replace its three blocks with these:
+
+```powershell
+# Branch files
+$base = git merge-base HEAD origin/main  # edit: origin/<default branch>
+git diff --name-only --diff-filter=d $base; git ls-files --others --exclude-standard
+```
+
+```powershell
+# Add or change a feature
+$feature = 'NEW_FEATURE'  # edit: its folder name under docs/
+$docs = @()  # edit: the numbered docs it needs now, e.g. '3.CONVENTIONS', '5.DECISIONS'
+$from = 'docs\_FEATURE_TEMPLATE'
+New-Item -ItemType Directory -Force "docs\$feature", '.claude\rules' | Out-Null
+$enc = New-Object Text.UTF8Encoding $false
+function Fill($src, $dst) { $s = Join-Path (Get-Location) $src; $t = Join-Path (Get-Location) $dst; if (-not (Test-Path $s)) { "no template $src" } elseif (Test-Path $t) { "kept $dst" } else { [IO.File]::WriteAllText($t, [IO.File]::ReadAllText($s).Replace('{{FEATURE_NAME}}', $feature), $enc); "made $dst" } }
+Fill "$from\README.md" "docs\$feature\README.md"
+Fill "$from\rule.md" ".claude\rules\$feature.md"
+foreach ($n in $docs) { Fill "$from\$n.md" "docs\$feature\$n.md" }
+```
+
+```powershell
+# Sync the docs with the code, step 1
+$range = (git log -1 --format=%h -- docs AGENTS.md) + '..HEAD'  # edit: the user's range, if they gave one
+git log --oneline $range; git diff --stat $range
+```
+
+The feature block writes UTF-8 without a byte-order mark on purpose: Windows PowerShell's `Set-Content
+-Encoding utf8` adds one, which hides a rule's frontmatter from Claude Code.
 
 ## Where to start the agent
 
@@ -120,6 +177,14 @@ what the repository's `.claude/settings.json` declares.
 | Permissions for this repository's commands and secrets | Repository | Same rules for everyone |
 | Model, effort level, update channel, theme | You | Personal preference; the docs don't depend on them |
 | Personal plugins, skills and hooks | You | Unless the team agrees to make one standard |
+
+**Only you commit.** Claude Code already commits only when asked. To make it unable to, add these to
+`permissions.deny` in `.claude/settings.json`. The `-C` lines matter: without them `git -C <dir> commit`
+slips past.
+
+```json
+"Bash(git commit*)", "Bash(git -C * commit*)", "PowerShell(git commit*)", "PowerShell(git -C * commit*)"
+```
 
 **Plugins that change built-in tools.** Some personal plugins block or redirect a built-in tool, for
 example to save context. On that machine, a 2.INSTRUCTIONS row naming the blocked tool won't work. Either

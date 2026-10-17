@@ -10,15 +10,16 @@
 
 ## Always
 
-1. **Follow the instructions.** Before your first action, read [2.INSTRUCTIONS](docs/2.INSTRUCTIONS.md). Do
-   everything the way it says: its commands, its tool for each action, and the playbook for your task.
-2. **No instruction, no action.** If your task matches no playbook, or needs a command or tool that
-   2.INSTRUCTIONS doesn't cover, or two instructions conflict: stop. Until it is resolved you may only
-   read. Tell the user what is missing and propose the exact lines to add. Continue only once they are in
-   2.INSTRUCTIONS, written by the user or approved by them and added by you word for word.
+1. **Follow the instructions.** Before your first action, read [2.INSTRUCTIONS](docs/2.INSTRUCTIONS.md); in a
+   feature, also its README and the docs it lists for your task. Do everything the way they say: their
+   commands, their tool for each action, and the playbook for your task.
+2. **No instruction, no action.** If your task matches no playbook, or needs a command or tool that neither
+   2.INSTRUCTIONS nor the feature's own covers, or two instructions conflict: stop. Until it is resolved you
+   may only read. Tell the user what is missing and propose the exact lines to add. Continue only once they
+   are in the right 2.INSTRUCTIONS, written by the user or approved by them and added by you word for word.
 3. **Tests first.** Before changing behaviour, write the test [4.TEST](docs/4.TEST.md) calls for, run it,
    and see it fail for the reason you expect. Only then implement, until it passes. If 4.TEST exempts the
-   change, say which exemption applies.
+   change, say which exemption applies, and check the change the way that exemption says.
 
 ## Docs
 
@@ -35,9 +36,13 @@ Your training data is older than this code. Read the matching doc instead of rel
 
 ### Feature docs
 
+A feature's README is its index, as this file is the repository's. Its numbered docs add to the root doc with
+the same number and never override it; a conflict between the two falls under rule 2.
+
 None yet.
-<!-- Replace "None yet." with a table, one row per docs/<Feature>/ folder (see docs/_FEATURE_TEMPLATE/):
-| Feature | Doc | Code |
+<!-- Replace "None yet." with a table, one row per docs/<Feature>/ folder; how to start one is in 2.INSTRUCTIONS
+     "Add or change a feature":
+| Feature | Index | Code |
 | --- | --- | --- |
 | Ocr | [README](docs/Ocr/README.md) | `src/Ocr/` |
 -->

@@ -20,17 +20,21 @@ AgentsTemplate/
     ├── AGENTS.md                    enforcement (instructions, test-first) and the docs index
     ├── CLAUDE.md                    "@AGENTS.md", so Claude Code reads the same index
     ├── .claude/
-    │   ├── settings.json            plugins and permissions; never-cd rules; hides docs/_HUMANS.md
+    │   ├── settings.json            plugins and permissions; never-cd rules; hides docs/_HUMANS.md and _NOTES.md
     │   └── agents/SUBAGENTS.md      this repository's agent, for parent sessions that add it
     └── docs/
         ├── 1.PROJECT.md             purpose, milestones, prerequisites, layout
         ├── 2.INSTRUCTIONS.md        shell commands, the tool for each action, a playbook per task
-        ├── 3.CONVENTIONS.md         style, naming, architecture, patterns, contracts, git format
+        ├── 3.CONVENTIONS.md         scope, style, naming, architecture, patterns, contracts, git format
         ├── 4.TEST.md                test frameworks and layout, what each change ships with
         ├── 5.DECISIONS.md           why things are the way they are
         ├── 6.TODOS.md               deferred renames, restructures, debt
-        ├── _FEATURE_TEMPLATE/       README and path rule to copy per feature, e.g. docs/Ocr/
-        └── _HUMANS.md               for people only: how it all works, routines, Claude Code features
+        ├── _FEATURE_TEMPLATE/       what each docs/<Feature>/ copies (not copied as a feature itself):
+        │   ├── README.md                the feature's index and contract, as AGENTS.md is the repository's
+        │   ├── rule.md                  becomes .claude/rules/<Feature>.md, loading the README, as CLAUDE.md does
+        │   └── 1.PROJECT.md … 6.TODOS.md  what the feature adds to each root doc, copied only when it has some
+        ├── _HUMANS.md               for people only: how it all works, routines, Claude Code features
+        └── _NOTES.md                for people only: your scratchpad, hidden from agents
 ```
 
 How the files work together, where to start an agent, and the day-to-day routines are in
@@ -85,13 +89,19 @@ that needs one makes the agent stop and propose it (the gate in AGENTS.md), and 
 - **Never a work repository itself:** delete `.claude/agents/SUBAGENTS.md`.
 - **Code in a language with an official LSP plugin:** enable it in `.claude/settings.json` (such as
   `"clangd-lsp@claude-plugins-official": true`), and list its language server in 1.PROJECT Prerequisites.
+- **Commands in PowerShell, not Bash:** swap in the PowerShell blocks from `_HUMANS.md` "Commands in
+  PowerShell".
+- **No tests yet, on purpose:** log it in 5.DECISIONS with a "Revisit when", and add the exemption shown at
+  the bottom of 4.TEST, naming the commands that check a change by hand.
 - **Adopting into an existing project:** have the agent fill in what the code already shows:
 
   > This repository was just given the agent-docs template, and setting it up is the task: the "Always"
   > rules in AGENTS.md don't apply until it's done. Replace every *not set up yet* and default in AGENTS.md
   > and docs/ that the build files, CI, configs, README or git log contradict or can fill, and merge any
-  > existing CLAUDE.md or docs instead of replacing them, asking before moving content. Never invent
-  > commands, versions or rules; list what you couldn't verify as questions for me.
+  > existing CLAUDE.md or docs instead of replacing them, asking before moving content. If most of the code
+  > predates the conventions you write, propose narrowing 3.CONVENTIONS Scope to the branch files, with the
+  > legacy files that keep their own style. Never invent commands, versions or rules; list what you couldn't
+  > verify as questions for me.
 
 ## Design choices, and why
 
@@ -104,6 +114,12 @@ that needs one makes the agent stop and propose it (the gate in AGENTS.md), and 
   no answer, test first) sit in the always-loaded file. Everything else is one indexed hop away.
 - **One home per kind of content.** Commands and procedures live in 2.INSTRUCTIONS, facts in 1.PROJECT,
   code shape in 3.CONVENTIONS, tests in 4.TEST. A fact kept in two places drifts.
+- **Features mirror the repository, one level down.** A feature's README is its index, a path rule loads it,
+  and its numbered docs add to the root doc with the same number, created only when there's something of its
+  own to say. Agents navigate both levels the same way, and a small feature costs one README.
+- **Commands run as pasted and say what success looks like.** An agent's shell keeps nothing between calls,
+  so each block stands alone, with `# edit` marking the only lines to change. A stated "Passes when" lets
+  the agent check the result instead of guessing.
 - **Short, human-curated, no restating defaults or code.** Claude Code's docs recommend under 200
   lines per instruction file, because adherence drops as files grow. An ETH Zurich study found
   LLM-generated context files lowered agents' success and raised cost by more than 20%. Hence the line
