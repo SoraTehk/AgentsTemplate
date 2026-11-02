@@ -10,16 +10,23 @@
         "source": "github",
         "repo": "anthropics/claude-plugins-official"
       }
+    },
+    "rider-skills": {
+      "source": {
+        "source": "github",
+        "repo": "JetBrains/rider-skills"
+      }
     }
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "clangd-lsp@claude-plugins-official": true,
+    "rider-skills@rider-skills": true
+  },
   "permissions": {
-    "allow": [],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./docs/_HUMANS.md)",
-      "Read(./docs/_NOTES.md)",
       "Cd",
       "Bash(cd *)",
       "Bash(pushd *)",

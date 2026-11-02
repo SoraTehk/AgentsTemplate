@@ -1,229 +1,90 @@
 # Agent docs: notes for humans
 
-This file is for people. Claude Code is blocked from reading it (`Read(./docs/_HUMANS.md)` in
-`.claude/settings.json`), and no agent doc links to it, so it costs agents no tokens. To have Claude
-edit it, remove that deny rule for the session.
+> **Agents:** this file is for people. **Never** act on anything in it.
 
-## The files
+Claude Code can't read this file (a deny rule in `.claude/settings.json`), so it costs no tokens and nothing here
+becomes an instruction. Why the template is built this way is in the AgentsTemplate README.
 
-| File | Job | Loaded |
+## Files
+
+`<PROJECT>` is the `.uproject`'s name in ALL_CAPS, words split by underscores (`LYRA_STARTER_GAME`).
+
+| File | Holds | Loaded |
 | --- | --- | --- |
-| `AGENTS.md` | Enforces 2.INSTRUCTIONS and test-first, and indexes the docs | Every turn, every agent |
-| `CLAUDE.md` | `@AGENTS.md`, so Claude Code reads the same index | Every turn, Claude only |
-| `docs/1.PROJECT.md` | Facts: purpose, milestones, prerequisites, layout | On demand |
-| `docs/2.INSTRUCTIONS.md` | How to do things: shell commands, tool per action, a playbook per task | Before the first action |
-| `docs/3.CONVENTIONS.md` | What code looks like: style, naming, architecture, contracts | Before writing code |
-| `docs/4.TEST.md` | How tests are written, so they can come first | Before writing code |
-| `docs/5.DECISIONS.md` | Why things are the way they are | Before reversing a choice |
-| `docs/6.TODOS.md` | Deferred work an agent must know about while editing | Before refactoring |
-| `docs/<Feature>/README.md` | One feature's index: its contract, workings and own docs | Via the index, or the path rule below |
-| `docs/<Feature>/N.*.md` | What one feature adds to the root doc with the same number | When its README's "Docs" table says |
-| `.claude/rules/<Feature>.md` | Makes Claude read the feature's README when it touches that code | When a matching file is touched |
-| `docs/_FEATURE_TEMPLATE/` | The README, rule and numbered docs a feature copies, by the block in 2.INSTRUCTIONS | When a feature or one of its docs is created |
-| `.claude/settings.json` | Plugins, and permissions: what runs without asking, what is never read | At launch, only in this repository |
-| `.claude/agents/SUBAGENTS.md` | This repository's agent, used when a parent session adds it with `--add-dir`. Any filename loads; the `.md` extension, valid YAML frontmatter, and a `name` unique across the workspace are what count | In the parent session |
-| `docs/_HUMANS.md` | This file | Never, by agents |
-| `docs/_NOTES.md` | Your scratchpad: ideas and to-dos nobody has agreed on yet | Never, by agents |
+| `AGENTS.md` | Rule keywords, the gate, tests first, the docs skill, scope; imports the next two | Every session |
+| `docs/1.<PROJECT>.md` | The project index: docs, features, milestones, prerequisites, variables, SESSION_FILES, layout | Every session |
+| `docs/2.INSTRUCTIONS.md` | What to do, how, done when | Every session |
+| `docs/3`–`6` | Conventions, tests, decisions, TODOs; a doc exists only once it has content | When the index says |
+| `docs/<Feature>/` | A feature's index `1.<FEATURE>.md`, plus numbered docs that add to the root's | Via the index, or `.claude/rules/<Feature>.md` |
+| `CLAUDE.md` | `@AGENTS.md` | Every session |
+| `.claude/skills/agent-docs/` | How to edit, start and check the docs; feature templates | On a docs change |
+| `Tools/ue.py`, `Tools/python.cmd` | The engine commands, run with the engine's Python, which `python.cmd` finds from the `.uproject` | Per command |
+| `.claude/settings.json` | The `clangd-lsp` and `rider-skills` plugins, and deny rules | At launch |
+| `.claude/settings.local.json` | Your saved approvals, and any variable you override; not committed | At launch, for you |
+| `.claude/agents/SUBAGENTS.md` | This repository's agent for a parent session; delete it if there will never be one | In a parent session |
+
+## Permission prompts
+
+Commands prompt as usual. "Yes, and don't ask again" saves the approval in your `.claude/settings.local.json`, for
+you alone. Commands call `Tools/python.cmd` by its fixed path because Claude Code can't save an approval for a
+command whose program is a variable, such as `& "$env:UE_ENGINE_DIR\..."`. A `claude -p` run can't prompt: pass the
+commands it may run with `--allowedTools`.
 
 ## The gate
 
-If a task matches no playbook in 2.INSTRUCTIONS, or needs a command or tool it doesn't list, the agent
-stops, proposes the missing lines, and continues once they're in the file. Expect this often at first;
-2.INSTRUCTIONS grows out of real gaps. Review every proposed line: that file decides what agents do.
+A task or command 2.INSTRUCTIONS doesn't cover makes the agent stop and propose the lines; it continues once you
+approve them. With no user, as in CI, it ends its turn with the question. Expect this often at first, and review
+every proposed line: that file decides what agents do. Lint, running the game and Perforce's SESSION_FILES start
+*not set up yet*. Other tests and lint are Ask first; only the test-first test runs unasked.
 
-A new project starts with every command and the test framework marked *not set up yet*. That's
-deliberate: the first task that needs a build or a test makes the agent stop and propose one, so these
-get set up by the work that needs them, with you approving each line. The other defaults (tools, git
-format, conventions, test practice) suit most projects; edit any that yours decides differently.
+## Features
 
-## Features: the same hierarchy, one level down
+Ask: "start a feature called Inventory". A feature's docs mirror the root's, add to them, and never override them:
+a conflict makes the agent stop. Features don't nest; one that needs its own build becomes a work repository.
 
-A feature is documented the way the repository is, so an agent finds its way the same at both levels
-(5.DECISIONS D-002):
+## Work repositories
 
-| Repository | Feature | Difference |
-| --- | --- | --- |
-| `AGENTS.md`: the index, read first | `docs/<Feature>/README.md`: the index, plus the contract | The README holds content too; AGENTS.md only rules and links |
-| `CLAUDE.md` loads AGENTS.md | `.claude/rules/<Feature>.md` loads the README | The rule loads when Claude touches the feature's files |
-| `docs/1`–`6` | `docs/<Feature>/1`–`6`, only the ones with something of their own | A feature's doc adds to the root's; the root's still applies |
-| A work repository's AGENTS.md wins inside it | Neither wins: a conflict is two instructions conflicting, so the agent stops (rule 2) | Features share one build, commands and history |
-| Contracts with other repositories, in 3.CONVENTIONS | The README's Contract: all another feature may rely on | |
-| `SUBAGENTS.md` | None: features share the session | |
-
-Features don't nest. When one outgrows its folder, split it into sibling features; when it needs its own
-build or release, make it a work repository.
-
-To start a feature, or add a numbered doc to one, the agent runs the block in 2.INSTRUCTIONS "Add or change
-a feature": it copies from `docs/_FEATURE_TEMPLATE/` and never overwrites an existing file. You can ask for it
-directly ("start a feature called Ocr, with 3.CONVENTIONS and 5.DECISIONS").
-
-## Commands in PowerShell
-
-2.INSTRUCTIONS is written for Bash. If this project's commands are PowerShell, say so in its first paragraph
-under "Shell commands", change the "Run a command from this file" row to the `PowerShell` tool (with `Bash`
-only for read-only commands of the agent's own), and replace its three blocks with these:
+Ask: "add the work repositories ChildA and ChildB". Then always start in the parent:
 
 ```powershell
-# Branch files
-$base = git merge-base HEAD origin/main  # edit: origin/<default branch>
-git diff --name-only --diff-filter=d $base; git ls-files --others --exclude-standard
-```
-
-```powershell
-# Add or change a feature
-$feature = 'NEW_FEATURE'  # edit: its folder name under docs/
-$docs = @()  # edit: the numbered docs it needs now, e.g. '3.CONVENTIONS', '5.DECISIONS'
-$from = 'docs\_FEATURE_TEMPLATE'
-New-Item -ItemType Directory -Force "docs\$feature", '.claude\rules' | Out-Null
-$enc = New-Object Text.UTF8Encoding $false
-function Fill($src, $dst) { $s = Join-Path (Get-Location) $src; $t = Join-Path (Get-Location) $dst; if (-not (Test-Path $s)) { "no template $src" } elseif (Test-Path $t) { "kept $dst" } else { [IO.File]::WriteAllText($t, [IO.File]::ReadAllText($s).Replace('{{FEATURE_NAME}}', $feature), $enc); "made $dst" } }
-Fill "$from\README.md" "docs\$feature\README.md"
-Fill "$from\rule.md" ".claude\rules\$feature.md"
-foreach ($n in $docs) { Fill "$from\$n.md" "docs\$feature\$n.md" }
-```
-
-```powershell
-# Sync the docs with the code, step 1
-$range = (git log -1 --format=%h -- docs AGENTS.md) + '..HEAD'  # edit: the user's range, if they gave one
-git log --oneline $range; git diff --stat $range
-```
-
-The feature block writes UTF-8 without a byte-order mark on purpose: Windows PowerShell's `Set-Content
--Encoding utf8` adds one, which hides a rule's frontmatter from Claude Code.
-
-## Where to start the agent
-
-**With work repositories, start in the parent and add each one:**
-
-```sh
 claude --add-dir ChildA --add-dir ChildB
 ```
 
-One session then holds every repository, and you type only there. The parent delegates work inside a
-work repository to that repository's agent (`.claude/agents/`), which works in its own context and can
-be resumed for follow-ups. Tested on Claude Code 2.1.296, with work repositories nested inside the parent:
+- The parent delegates to each repository's agent; each adds about 200 lines to every parent session.
+- Permissions, hooks and `env` come only from where you start: set any override in the parent's local settings.
+- Each finds its own engine through its own `.uproject`; a `UE_ENGINE_DIR` set in the parent applies to all of them.
 
-| From each `--add-dir` repository | Loaded? |
+## Settings
+
+| What | Where |
 | --- | --- |
-| Skills, slash commands, agents | Yes |
-| `CLAUDE.md` / `AGENTS.md` and rules | Yes, because the parent's settings set `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` |
-| Plugins it enables | Yes, once installed on this machine (the first interactive session offers it) |
-| Plugins it disables | No: it can't turn off a plugin you enabled yourself |
-| Permissions, hooks, `env` | **No.** These come only from the folder you started in. Put rules that must hold in a parent session into the parent's settings, or into the work repository's agent frontmatter |
+| Plugins, deny rules, anything everyone needs | `.claude/settings.json` |
+| Overrides, only when the defaults miss: `UE_ENGINE_DIR` (else the `.uproject`'s `EngineAssociation`, from the registry), `UE_PROJECT_FILE`, `UE_EDITOR_TARGET` | `.claude/settings.local.json`, under `env` |
+| Personal notes for Claude | `CLAUDE.local.md`, not committed |
 
-`settings.json` can't make `--add-dir` permanent (`permissions.additionalDirectories` grants file access
-only), so keep the command in a shell alias or script.
-
-Other ways to start:
-
-| Started in | Gets | Use when |
-| --- | --- | --- |
-| A work repository, on its own | Its full setup, plus every parent's instructions | Long work inside that one repository |
-| A repository cloned alone | Its own setup only | It isn't part of a workspace |
-
-Codex and other agents read only the AGENTS.md files from the git root down to where they start, so
-there, start in the repository you're working on.
-
-## The working directory never changes
-
-Every session stays in the folder it started in, so paths always mean the same thing and the parent never
-ends up running a child's commands from the wrong place. Three layers hold this:
-
-| Layer | What it does |
-| --- | --- |
-| 2.INSTRUCTIONS "Run a shell command" | Tells the agent to pass directories as arguments (`git -C`, `cmake -S/-B`) and never `cd` |
-| `CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR` in `settings.json` | Claude Code returns to the starting folder after every Bash or PowerShell command anyway |
-| Deny rules in `settings.json` | Block `cd`, `pushd`, `Set-Location` and their aliases, in combined commands too, and `Cd` turns off `/cd` |
-
-Deny rules match the command text Claude writes, so they catch the usual spellings but aren't a security
-boundary. A tool that only works from its own folder needs a wrapper that takes the folder as an argument,
-added to 2.INSTRUCTIONS before use.
-
-## Claude Code defaults, deliberately not written down
-
-Claude Code's built-in system prompt already makes it: use its file tools instead of `cat`, `find`,
-`grep`, `sed` or `echo >`; read a file before editing it; prefer editing to creating files; confirm
-before destructive or hard-to-reverse actions; commit and push only when asked; never skip hooks
-(`--no-verify`) or use interactive git (`-i`). Repeating these in 2.INSTRUCTIONS spends tokens every
-session for nothing. Write a rule there only when this repository wants something different. These
-defaults can change between Claude Code versions, so recheck before relying on one.
-
-## How these docs relate to Claude Code features
-
-| Ours | Claude Code feature | How they combine |
-| --- | --- | --- |
-| `AGENTS.md` + `CLAUDE.md` | Memory files, native AGENTS.md | Built on the feature |
-| The gate in AGENTS.md | Permissions, hooks | The gate is guidance. For hard enforcement, list the shell commands from 2.INSTRUCTIONS in `permissions.allow`: those run without asking, anything else prompts you |
-| 4.TEST test-first | Hooks | Guidance. To enforce it, add a hook that runs the test suite before the agent finishes |
-| 2.INSTRUCTIONS playbooks | Skills | Overlap by design. A playbook is reached through the gate every time; a skill loads only if Claude picks it. Turn a playbook into a skill only when it outgrows ~10 steps or needs scripts, and leave a one-line playbook pointing to it |
-| 2.INSTRUCTIONS "Find a symbol" row | Code intelligence (LSP) plugins | Built on the feature: the `LSP` tool for navigation, plus diagnostics after every edit |
-| 2.INSTRUCTIONS commands and setup | `/run-skill-generator`, `/verify` | Both record build and launch recipes as `.claude/skills/run-<name>/`, a second copy of your commands. Keep 2.INSTRUCTIONS as the source; if you generate one, make it point there |
-| 3.CONVENTIONS | `.claude/rules/` with `paths` | Repository-wide conventions stay in 3.CONVENTIONS, for every agent. A convention for one directory or language can be a path rule instead, auto-loaded by Claude only. Never keep it in both |
-| `docs/<Feature>/` | `.claude/rules/` with `paths` | Built on the feature |
-| 5.DECISIONS | Auto memory | No clash: auto memory is private to your machine. During a sync, move anything there the team needs (`/memory` shows it) |
-| 6.TODOS | The in-session task list | No clash: the task list lasts one session. The index says so |
-| The sync playbook | `/init`, `/doctor prompt-audit` | Don't run `/init` here: it writes content into `CLAUDE.md` and breaks the one-line import. Run `/doctor prompt-audit` after a sync: it finds contradictions and dead references |
-| Hiding this file | Permissions `deny` | Built on the feature |
-
-## Your settings or the repository's
-
-Anything installed or set in `~/.claude/settings.json` works only for you. A new developer gets only
-what the repository's `.claude/settings.json` declares.
-
-| Setting | Where | Why |
-| --- | --- | --- |
-| Plugins the code needs (a language's LSP plugin, project tooling) | Repository | Everyone working here needs them; 2.INSTRUCTIONS names their tools |
-| The `claude-plugins-official` marketplace entry | Repository (already in the template) | A fresh machine doesn't know that marketplace until its first interactive session, so plugins from it would fail to resolve |
-| Permissions for this repository's commands and secrets | Repository | Same rules for everyone |
-| Model, effort level, update channel, theme | You | Personal preference; the docs don't depend on them |
-| Personal plugins, skills and hooks | You | Unless the team agrees to make one standard |
-
-**Only you commit.** Claude Code already commits only when asked. To make it unable to, add these to
-`permissions.deny` in `.claude/settings.json`. The `-C` lines matter: without them `git -C <dir> commit`
-slips past.
-
-```json
-"Bash(git commit*)", "Bash(git -C * commit*)", "PowerShell(git commit*)", "PowerShell(git -C * commit*)"
-```
-
-**Plugins that change built-in tools.** Some personal plugins block or redirect a built-in tool, for
-example to save context. On that machine, a 2.INSTRUCTIONS row naming the blocked tool won't work. Either
-make the plugin a team standard (declare it in the repository and name its tools in 2.INSTRUCTIONS), or
-keep that row free of tool names.
-
-**Code intelligence.** Enable one official LSP plugin per language the repository uses. Each needs its
-language server on `PATH`, so list that in 1.PROJECT Prerequisites:
-
-| Language | Plugin | Language server | Install (see the plugin's README for other systems) |
-| --- | --- | --- | --- |
-| C/C++ | `clangd-lsp` | `clangd` | `winget install LLVM.LLVM` |
-| C# | `csharp-lsp` | `csharp-ls` | `dotnet tool install --global csharp-ls` |
-| Python | `pyright-lsp` | `pyright-langserver` | `npm install -g pyright` |
-| Lua | `lua-lsp` | `lua-language-server` | Release download, or a package manager |
-| TypeScript | `typescript-lsp` | `typescript-language-server` | `npm install -g typescript-language-server typescript` |
-
-It works if a `Found N new diagnostic issues` line appears after Claude edits a file of that language.
-If it doesn't, check the Errors tab in `/plugin` for `Executable not found in $PATH`. Cloud sessions don't
-start language servers at all.
+- **Deny rules** block `cd` and its aliases, so a session never leaves its folder. Claude Code 2.1.272 warns that
+  the `Cd` rule is unknown; newer versions use it.
+- **Stop Claude committing:** add `"PowerShell(git commit*)", "PowerShell(git -C * commit*)"` and the same two as
+  `Bash(...)` to `permissions.deny`.
+- **Rider:** each developer enables Rider's MCP server once (Settings → AI → MCP Server, then Auto-Configure for
+  Claude Code), with the solution open. The `rider-skills` plugin comes from `.claude/settings.json`: accept it when
+  Claude Code offers it. Its UE skills look for the `.uproject` in the folder Claude Code starts in.
+- **Code intelligence without Rider:** `clangd` on `PATH` (`winget install LLVM.LLVM`) plus the C++ database. It works when a
+  `Found N new diagnostic issues` line follows an edit; otherwise see `/plugin`, Errors.
+- **Personal plugins** that block a built-in tool break rows naming it: make the plugin a team standard, or keep
+  the rows free of tool names.
 
 ## Routine
 
-**Sync the docs** in a fresh session, in the repository whose code changed:
+- **Docs drift:** ask Claude to update the docs for what changed, or to check them; review the edits.
+- **Check what loaded:** `/memory`, `/context`, `/doctor prompt-audit`. Never run `/init`: it breaks `CLAUDE.md`.
+- **Update the template:** replace the template-owned files with the newer copies:
+  `.claude/skills/agent-docs/`, `Tools/python.cmd` and `Tools/ue.py`.
+- **Add** a plugin, skill or engine command with its row in 2.INSTRUCTIONS; a variable with its row in the index.
+- **Other agents:** for Codex, add `.agents/skills/agent-docs/SKILL.md` with the same frontmatter and a body pointing
+  to Claude's copy. For Gemini CLI, `.gemini/settings.json` with `{ "context": { "fileName": ["AGENTS.md"] } }`.
+  Either needs its own permission setup and shell variables.
 
-> Sync the docs with the code for `main..HEAD`.
+## Notes
 
-Any git range works. With no range, the agent uses the commits since `docs/` last changed. The playbook
-"Sync the docs with the code" in 2.INSTRUCTIONS does the rest. For a contract between repositories, sync
-the repository that owns it first.
-
-**Check what loaded:** `/memory` lists the instruction files, `/context` shows what they cost, and
-`/doctor prompt-audit` reviews them.
-
-**Add to the environment:**
-
-- A plugin: `"<plugin>@<marketplace>": true` in `enabledPlugins` (browse with `/plugin`). A marketplace
-  other than the official one also needs an `extraKnownMarketplaces` entry. Then add its row to
-  2.INSTRUCTIONS "Skills and plugins". If you already installed it for yourself, still declare it here.
-- A skill: `.claude/skills/<name>/SKILL.md`, plus its row in 2.INSTRUCTIONS.
-- An MCP server: `.mcp.json`. Each person approves it once.
-- Personal settings: `CLAUDE.local.md` and `.claude/settings.local.json`. Both are git-ignored.
+Your scratchpad. Move a settled item into the doc it belongs to.
