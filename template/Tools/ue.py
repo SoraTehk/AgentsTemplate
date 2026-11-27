@@ -23,7 +23,7 @@ def env_path(name):
     # Tools/python.cmd sets UE_ENGINE_DIR from the .uproject's EngineAssociation when nobody else has.
     value = os.environ.get(name, "").strip()
     if not value:
-        finish(2, f"{name} is not set: set it in .claude/settings.local.json, then start a new session.")
+        finish(2, f"{name} is not set: set it in the environment of the calling process.")
     return Path(value)
 
 
@@ -48,7 +48,7 @@ def project():
         return path
     found = sorted(ROOT.glob("*.uproject")) or sorted(ROOT.glob("*/*.uproject"))
     if len(found) != 1:
-        finish(2, f"{len(found)} .uproject files in {ROOT}: set UE_PROJECT_FILE in .claude/settings.local.json.")
+        finish(2, f"{len(found)} .uproject files in {ROOT}: set UE_PROJECT_FILE in the environment of the calling process.")
     return found[0]
 
 
@@ -71,7 +71,7 @@ def editor_target():
         return f"{project().stem}Editor"
     found = sorted(path.name[:-len(".Target.cs")] for path in source.glob("*Editor.Target.cs"))
     if len(found) != 1:
-        finish(2, f"{len(found)} editor targets in {source}: set UE_EDITOR_TARGET in .claude/settings.local.json.")
+        finish(2, f"{len(found)} editor targets in {source}: set UE_EDITOR_TARGET in the environment of the calling process.")
     return found[0]
 
 

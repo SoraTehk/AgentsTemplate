@@ -4,13 +4,13 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
 
 ## AGENTS.md and CLAUDE.md
 
-- **Always** keep AGENTS.md to rules every turn needs. Budget: ~45 lines, not counting what it imports.
-- **Never** import (`@path`) anything but the docs every session needs: the project index and the instructions.
-  Claude Code loads an import's full text every session. **Always** put each import on its own line, under a sentence
-  telling an agent that opened the file with a tool to read them.
-- **Never** add to CLAUDE.md anything but `@AGENTS.md` and lines for Claude-only behaviour.
+- **Always** list the project index and instructions as ordinary repository-relative paths in AGENTS.md.
+  Tell every agent to read them before its first task unless their contents are already in the session.
+  Keep the file to rules every turn needs. Budget: ~45 lines.
+- **Always** put Claude Code's imports in CLAUDE.md, one per line: `@AGENTS.md`, then the project index and
+  the instructions listed by AGENTS.md. Any other text in CLAUDE.md covers Claude-only behaviour.
 
-## .claude/agents/
+## Claude Code subagents in .claude/agents/
 
 - This repository's agent, used when a parent repository opens it with `--add-dir`. **Always** keep its `name`
   unique across every repository in the workspace, without ":", and its frontmatter valid YAML: Claude Code silently
@@ -18,21 +18,22 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
 - This repository's permissions and hooks don't apply inside a parent session. **Always** add `permissionMode`,
   `disallowedTools` or `hooks` frontmatter for any that must hold there too.
 
-## The project index, 1.\<PROJECT>.md, and a feature's 1.\<FEATURE>.md
+## The project index, 1_\<PROJECT>.md, and a feature's 1_\<FEATURE>.md
 
+- **Always** prefix primary documents with their number and an underscore. For a subdivision, append an uppercase letter before the underscore, such as `1A_OVERVIEW.md`.
 - **Always** name an index after its project or feature in ALL_CAPS, words split by underscores, as the numbered docs
-  are: `LyraStarterGame` → `1.LYRA_STARTER_GAME.md`, `BuildingSystem` → `1.BUILDING_SYSTEM.md`. Its folder and its
-  heading keep the name as it is (`docs/BuildingSystem/`, `# 1. BuildingSystem`).
+  are: `LyraStarterGame` → `1_LYRA_STARTER_GAME.md`, `BuildingSystem` → `1_BUILDING_SYSTEM.md`. Its folder and its
+  heading keep the name as it is (`docs/BuildingSystem/`, `# 1_BuildingSystem`).
 - **Always** change only the Docs table when a doc is added, removed or renamed; no other doc names it. The project
-  index's row for 6.TODOS, once it exists:
-  `| [6.TODOS](6.TODOS.md) | Work deferred across sessions (not your in-session task list) | Before refactoring, or when you defer something |`
+  index's row for 6_TODOS, once it exists:
+  `| [6_TODOS](6_TODOS.md) | Work deferred across sessions (not your in-session task list) | Before refactoring, or when you defer something |`
 - What and why: grow it into two to four sentences: the problem, who has it, and what this project does about it.
 - Features table, one row per `docs/<Feature>/` folder:
 
   ```markdown
-  | Feature | Index | Code |
-  | --- | --- | --- |
-  | Inventory | [1.INVENTORY](Inventory/1.INVENTORY.md) | `Source/<Module>/Inventory/` |
+  | Feature | Index | Code | Tests |
+  | --- | --- | --- | --- |
+  | Inventory | [1_INVENTORY](Inventory/1_INVENTORY.md) | `Source/<Module>/Inventory/` | `Source/<Module>/Tests/Inventory/` |
   ```
 
 - Milestones: status is one of done, in progress, next, parked. Newest at the bottom; delete done rows once nobody
@@ -48,18 +49,18 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
 
 **A feature's index** also:
 
-- **Always** keeps **Code** and **Tests** listing every folder the feature owns; the rule's `paths` match them. A
+- **Always** keeps **Code** and **Tests** listing every folder the feature owns. Any Claude path rule matches them. A
   feature in a plugin lives in `Plugins/<Plugin>/Source/<Module>/`.
 - Docs table, replacing "None yet", one row per numbered doc in its folder, in number order:
 
   ```markdown
   | Doc | Holds | Read when |
   | --- | --- | --- |
-  | [2.INSTRUCTIONS](2.INSTRUCTIONS.md) | Its own tasks, commands and procedures | Before your first action in it |
-  | [3.CONVENTIONS](3.CONVENTIONS.md) | Its vocabulary, and rules for its code only | Before writing or reviewing its code |
-  | [4.TEST](4.TEST.md) | Its own test framework rows | Before changing its behaviour |
-  | [5.DECISIONS](5.DECISIONS.md) | Why it works the way it does | Before reversing a choice in it |
-  | [6.TODOS](6.TODOS.md) | Its deferred work and known gaps | Before refactoring it, or when you defer something in it |
+  | [2_INSTRUCTIONS](2_INSTRUCTIONS.md) | Its own tasks, commands and procedures | Before your first action in it |
+  | [3_CONVENTIONS](3_CONVENTIONS.md) | Its vocabulary, and rules for its code only | Before writing or reviewing its code |
+  | [4_TEST](4_TEST.md) | Its own test framework rows | Before changing its behaviour |
+  | [5_DECISIONS](5_DECISIONS.md) | Why it works the way it does | Before reversing a choice in it |
+  | [6_TODOS](6_TODOS.md) | Its deferred work and known gaps | Before refactoring it, or when you defer something in it |
   ```
 
 - Status: planned, in progress, done or parked.
@@ -69,7 +70,7 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
   should open first.
 - Layout: every folder it owns, code and content, and what each holds.
 
-## 2.INSTRUCTIONS
+## 2_INSTRUCTIONS
 
 - **Always** write one row per thing an agent does. A "how" that doesn't fit its cell goes in a section below the
   table, linked from its row.
@@ -91,7 +92,7 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
 - Budget: ~200 lines. A feature's: ~100, holding what that feature alone needs; a task or command two features share
   goes in the root's.
 
-## 3.CONVENTIONS
+## 3_CONVENTIONS
 
 - **Always** keep rules repository-wide: a rule about one feature goes in that feature's conventions, one every
   feature follows comes up here.
@@ -120,7 +121,7 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
 
 - Budget: ~200 lines. A feature's: ~100, only rules about that feature.
 
-## 4.TEST
+## 4_TEST
 
 - **Always** keep it to what an agent needs to write a test here; how to run tests is in the instructions.
 - A row for tests that need a ticking world:
@@ -129,7 +130,7 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
   to revisit), and say so here.
 - Budget: ~60 lines. A feature's: ~40, only framework rows that differ from the root's.
 
-## 5.DECISIONS
+## 5_DECISIONS
 
 - **Always** say what holds now. A decision that changes is edited in place, adding "revised YYYY-MM-DD" to its
   heading. **Never** add an entry that supersedes another.
@@ -141,7 +142,7 @@ They add to the shared rules in SKILL.md. A feature's doc follows the root doc's
   Rejected, Revisit when.
 - A feature's are numbered on their own and cited as "\<Feature> D-00N". Budget: ~100 lines.
 
-## 6.TODOS
+## 6_TODOS
 
 - **Never** list work an agent needn't know about while editing: this is not a backlog, and features and bugs belong
   in the issue tracker. An item is here so nobody "fixes" it halfway by accident.

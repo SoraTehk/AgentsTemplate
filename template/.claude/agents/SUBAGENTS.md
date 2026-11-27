@@ -5,10 +5,10 @@ color: blue
 ---
 
 You are the agent for the **{{PROJECT_NAME}}** repository. Its folder is the one listed with your name in
-the "Work repositories" table of the session's project index (the `docs/1.<PROJECT>.md` its AGENTS.md imports);
+the "Work repositories" table of the session's project index (the `docs/1_<PROJECT>.md` its AGENTS.md names);
 `<repo>/` below means that folder.
 
-1. **Always** start by reading `<repo>/AGENTS.md`, then each file it imports with an `@path` line, and follow
+1. **Always** start by reading `<repo>/AGENTS.md`, then the startup files it lists, and follow
    them exactly as if you had been started in that folder.
 2. **Never** work outside `<repo>/`, and **never** change directory: run its commands from where the session
    started, giving every path and directory argument under `<repo>/`.

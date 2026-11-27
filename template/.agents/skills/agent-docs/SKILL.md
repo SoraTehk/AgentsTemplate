@@ -12,7 +12,7 @@ It holds no facts about this project, so a newer template's copy can replace it 
 
 | Job | Do |
 | --- | --- |
-| Change a doc: a fact, rule, command, decision or TODO | The shared rules below, then that doc's own rules in [references/docs.md](references/docs.md). A root doc that doesn't exist yet, such as 6.TODOS: copy it from `assets/root/` and add its row to the project index's Docs table |
+| Change a doc: a fact, rule, command, decision or TODO | The shared rules below, then that doc's own rules in [references/docs.md](references/docs.md). A root doc that doesn't exist yet, such as 6_TODOS: copy it from `assets/root/` and add its row to the project index's Docs table |
 | Start a feature, or another numbered doc for one | [Start a feature](#start-a-feature) |
 | Add a work repository to this one | [references/work-repositories.md](references/work-repositories.md) |
 | Check the docs, or review after a large change | [references/check.md](references/check.md) |
@@ -22,10 +22,8 @@ It holds no facts about this project, so a newer template's copy can replace it 
 For every agent doc, a feature's included:
 
 - **Always describe the present.** Edit what changed and delete what no longer holds; version control keeps the past.
-- **Always give a fact one home**: the doc whose "Holds" column in the project index names it. **Never** name or link
-  another doc except from an index (the project index, `docs/1.<PROJECT>.md`, for the root docs; a feature's
-  `1.<FEATURE>.md` for its own); refer to content by what it is ("the conventions", "the test framework", "the
-  project index") and point back to the index for anything else.
+- **Always give a fact one home** in the doc whose "Holds" column names it. Keep links between numbered docs
+  in their indexes. The startup files and skill adapters point agents into that structure.
 - **Always make the smallest true edit.** Write only facts you checked. **Never** write what the code, the compiler, a
   linter or the agent's built-in defaults already say.
 - **Always start a rule with Always, Ask first or Never**, as AGENTS.md defines them, and give its why when it isn't
@@ -47,13 +45,15 @@ For every agent doc, a feature's included:
 
 ## Start a feature
 
-1. Copy `assets/feature/1.{{FEATURE_NAME_CAPS}}.md` to `docs/<Feature>/1.<FEATURE>.md` and `assets/feature/rule.md` to
-   `.claude/rules/<Feature>.md`, replacing `{{FEATURE_NAME}}` with the feature's name, `{{FEATURE_NAME_CAPS}}` with
+1. Copy `assets/feature/1_{{FEATURE_NAME_CAPS}}.md` to `docs/<Feature>/1_<FEATURE>.md`,
+   replacing `{{FEATURE_NAME}}` with the feature's name, `{{FEATURE_NAME_CAPS}}` with
    that name in ALL_CAPS (`BuildingSystem` → `BUILDING_SYSTEM`), `{{PROJECT_NAME}}` with the project's, and
    `{{MODULE_NAME}}` with the module the feature's code lives in (the project index's Layout names the game module).
-2. Add the feature's row to the project index's Features table. Point the index's **Code** and **Tests**, and the rule's
-   `paths`, at the feature's folders.
-3. Fill in what you know; leave the rest as the asset has it.
+2. Add the feature's index, code and test folders to the project index's Features table. List the same folders
+   in the feature index's **Code** and **Tests**. Every agent uses the Features table to find the applicable instructions.
+3. For projects using Claude Code path rules, copy `assets/feature/rule.md` to `.claude/rules/<Feature>.md`.
+   Replace its tokens and match its `paths` to the folders in the table.
+4. Fill in what you know; leave the rest as the asset has it.
 
 **Another numbered doc:** only once the feature has something of its own for it that the root doc with that number
 doesn't hold. Copy it from `assets/feature/` the same way, and add its row to the feature's Docs table.

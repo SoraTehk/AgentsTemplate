@@ -1,4 +1,4 @@
-# 2. Instructions: {{FEATURE_NAME}}
+# 2_Instructions: {{FEATURE_NAME}}
 
 ## What to do
 

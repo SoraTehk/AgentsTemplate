@@ -1,13 +1,13 @@
-# 5. Decisions
+# 5_Decisions
 
-## D-001: Agent docs follow the AgentsTemplate layout (2026-11-02)
+## D-001: Agent docs follow the AgentsTemplate layout (2026-11-02, revised 2026-11-27)
 
 - **Context:** coding agents need the same instructions every session, in every repository of a workspace, and in
-  every feature of a repository. Claude Code is the agent we target; others may follow.
-- **Decision:** AGENTS.md holds only the rules every turn needs and imports the two docs every session needs, the
-  project index (`1.<PROJECT>.md`) and the instructions; CLAUDE.md only imports AGENTS.md. The project index is the
+  every feature of a repository. Codex and Claude Code share the workflow.
+- **Decision:** AGENTS.md holds the rules every turn needs and lists the two startup files, the
+  project index (`1_<PROJECT>.md`) and the instructions. CLAUDE.md imports all three. The project index is the
   one index, and the numbered docs each hold one kind of content and never name each other. A feature mirrors this
-  one level down: its index, `1.<FEATURE>.md`, is built like the project's, so a feature can become a project of its
+  one level down: its index, `1_<FEATURE>.md`, is built like the project's, so a feature can become a project of its
   own. How to change any of these docs is the agent-docs skill, not the docs. Rules start with Always, Ask first or
   Never. Features don't nest. Source: [AgentsTemplate](https://github.com/SoraTehk/AgentsTemplate).
 - **Rejected:** one long CLAUDE.md (it costs context every turn, and another agent couldn't share it); the index in

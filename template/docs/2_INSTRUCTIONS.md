@@ -1,6 +1,6 @@
-# 2. Instructions
+# 2_Instructions
 
-**Always** run commands in the `PowerShell` tool as written, from this repository's root, replacing only the
+**Always** run commands with PowerShell as written, from this repository's root, replacing only the
 `<placeholders>`. **Always** check the result against "Done when": anything else is a failure. **Never** work around
 a failure: report it. A row marked *not set up yet* counts as missing, so the gate applies.
 
@@ -8,8 +8,10 @@ a failure: report it. A row marked *not set up yet* counts as missing, so the ga
 
 | What you want to do | How | Done when |
 | --- | --- | --- |
-| Run a command | The `PowerShell` tool. **Never** change directory: pass folders as arguments. **Never** run interactive commands | As its row says |
-| Find a symbol's definition, references, callers or implementations | The `rider-skills:navigating-code` skill. Without Rider's MCP server, the `LSP` tool, which needs [the C++ database](#generate-the-c-database); search instead only where neither has it | |
+| Enable the shared skill in the local Claude skill menu | On Windows run `.\Tools\Link-AgentSkills.ps1 agent-docs` once per checkout | It reports the skill is linked or already linked |
+| Run a command | Use PowerShell with the shell tool's working directory set to the project root, including when working in a child repository. **Never** change directory within the command or run interactive commands | As its row says |
+| Inspect or edit files for an authorized task | Use the session's file, search, patch or shell tools within the task's scope | The inspected evidence or resulting diff addresses the task |
+| Find a symbol's definition, references, callers or implementations | Use Rider symbol lookup (via the navigating-code skill or the available Rider integration), then an available language server with [the C++ database](#generate-the-c-database). If neither resolves it, search and verify each match in source | |
 | Build | `Tools/python.cmd Tools/ue.py build`, the editor target. With the editor open and Live Coding on, it refuses: close the editor first | `exit 0` |
 | Generate the C++ database | `Tools/python.cmd Tools/ue.py clang-db`; [when and why](#generate-the-c-database) | `exit 0` |
 | Run tests | `Tools/python.cmd Tools/ue.py test <filter>`: one test's full name, or a prefix such as `{{PROJECT_NAME}}.Inventory`, or `{{PROJECT_NAME}}` for all of ours. **Always** for the test-first loop's own test. **Ask first** for any others | Every line says `Result={Success}`, then `exit 0` |
@@ -24,31 +26,26 @@ a failure: report it. A row marked *not set up yet* counts as missing, so the ga
 | Add a dependency (a plugin, a module in a `.Build.cs`, a third-party library) | **Ask first**. **Always** pin the exact version | |
 | Find the engine | `Tools/python.cmd Tools/ue.py engine` | It prints the engine's folder, then `exit 0` |
 | Look up an engine API | The engine's docs for its exact version, or its source under `Engine\Source` in the engine's folder. **Never** answer version-specific API questions from memory | |
-| Use a skill or plugin | `agent-docs`, for any change to the agent docs. The `rider-skills` plugin's skills, each for what its description says: `navigating-code`, `refactoring-code` (renames, moves, signature changes), `debugging-code`, `ue-code-authoring`, `ue-test-authoring`, `ue-live-debugging`. A skill's steps and commands count as these instructions; where one conflicts with them, the gate applies | As the skill says |
+| Use a skill or plugin | Follow the shared `agent-docs` skill for agent docs. When available, use Rider tools or skills for navigation, refactoring, debugging, UE code and tests. Otherwise use source, search, edits and the commands in this table. A skill's steps and commands count as these instructions. Where they conflict, the gate applies | As the task's row says |
 | Set up from a fresh copy | [Set up from a fresh copy](#set-up-from-a-fresh-copy) | The Build is done |
-| Answer a question or investigate | Read only: **never** change anything. Check the docs, then the code. **Always** cite `path:line` for every claim about the code | |
+| Answer a question or investigate | Read only: **never** change anything. Check the docs, then the code. **Always** cite `path:line` for every claim about the code | The answer cites the sources inspected |
 | Fix a bug | Reproduce it as a failing test, then fix the cause, not the symptom, until it passes. Then finish the task | The new test passes |
 | Add or change a feature | [Add or change a feature](#add-or-change-a-feature) | |
-| Change a contract with another repository | Update the contract in the conventions, then change the producer and every consumer, each through its repository's agent, running each one's tests | Both sides' tests pass |
-| Finish any task | **Always** run the Build, and fix every diagnostic your edits reported. Run tests and lint as their rows say. Report what you ran and the result, and anything left undone as deferred work to record | The Build is done, and no diagnostic from your edits remains |
+| Change a contract with another repository | Update the contract in the conventions. Work on the producer and each consumer under its own AGENTS.md, directly or through its repository agent if available. Run the affected tests in each repository | Both sides' tests pass |
+| Finish a task that changes project code, configuration or content | **Always** run the Build, and fix every diagnostic your edits reported. Run tests and lint as their rows say. Report what you ran and the result, and anything left undone as deferred work to record | The Build is done, and no diagnostic from your edits remains |
 
 **Known noise**, output every run prints that isn't a failure: none recorded yet.
 
 ### Generate the C++ database
 
-It writes `compile_commands.json` at this repository's root, which the `LSP` tool's language server reads. **Always** run it after the first Build, and again after adding a module or files.
+It writes `compile_commands.json` at this repository's root, for the C++ language server. **Always** run it after the first Build, and again after adding a module or files.
 Until the language server restarts with the new file, it finds nothing new: search instead, and check every hit.
 
 ### Set up from a fresh copy
 
-1. Install the prerequisites the project index lists.
-2. Find the engine. If it finds none, register the engine, or set `UE_ENGINE_DIR` in `.claude/settings.local.json`
-   and start a new session:
-
-   ```json
-   { "env": { "UE_ENGINE_DIR": "C:\\Program Files\\Epic Games\\UE_5.8" } }
-   ```
-
+1. Install the required prerequisites from the project index.
+2. Find the engine. If discovery fails, register the engine or set `UE_ENGINE_DIR` in the environment that
+   launches your agent and start a new session.
 3. Run the Build, then generate the C++ database.
 
 Known traps: none recorded yet.

@@ -1,12 +1,12 @@
 @echo off
-rem Runs a Python script with the engine's own interpreter, in isolated mode. Commands call it by this fixed path
-rem because Claude Code can't match a permission rule to a program named by a variable, such as $env:UE_ENGINE_DIR.
+rem Runs a Python script with the engine's own interpreter, in isolated mode. Use the same command path
+rem across agent shells and permission prompts.
 rem The engine is UE_ENGINE_DIR when it is set, else the one the .uproject's EngineAssociation names, looked up in the
 rem registry as Unreal's own tools do: a registered source build, or a launcher install.
 setlocal
 if not defined UE_ENGINE_DIR call :find_engine
 if not defined UE_ENGINE_DIR (
-  echo No engine found: register it, or set UE_ENGINE_DIR in .claude/settings.local.json. 1>&2
+  echo No engine found: register it, or set UE_ENGINE_DIR in the environment of the calling process. 1>&2
   exit /b 2
 )
 "%UE_ENGINE_DIR%\Engine\Binaries\ThirdParty\Python3\Win64\python.exe" -I %*

@@ -1,4 +1,4 @@
-# 6. TODOs: {{FEATURE_NAME}}
+# 6_TODOs: {{FEATURE_NAME}}
 
 Paths below are under `Source/{{MODULE_NAME}}/{{FEATURE_NAME}}/` unless they say otherwise.
 

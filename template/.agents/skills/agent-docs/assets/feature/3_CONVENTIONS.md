@@ -1,4 +1,4 @@
-# 3. Conventions: {{FEATURE_NAME}}
+# 3_Conventions: {{FEATURE_NAME}}
 
 ## Vocabulary
 

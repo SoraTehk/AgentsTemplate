@@ -2,8 +2,8 @@
 
 > **Agents:** this file is for people. **Never** act on anything in it.
 
-Claude Code can't read this file (a deny rule in `.claude/settings.json`), so it costs no tokens and nothing here
-becomes an instruction. Why the template is built this way is in the AgentsTemplate README.
+AGENTS.md directs agents away from this file. Claude Code also has a deny rule in `.claude/settings.json`.
+The AgentsTemplate README explains the design.
 
 ## Files
 
@@ -11,13 +11,14 @@ becomes an instruction. Why the template is built this way is in the AgentsTempl
 
 | File | Holds | Loaded |
 | --- | --- | --- |
-| `AGENTS.md` | Rule keywords, the gate, tests first, the docs skill, scope; imports the next two | Every session |
-| `docs/1.<PROJECT>.md` | The project index: docs, features, milestones, prerequisites, variables, SESSION_FILES, layout | Every session |
-| `docs/2.INSTRUCTIONS.md` | What to do, how, done when | Every session |
+| `AGENTS.md` | Rule keywords, the gate, tests first, the docs skill, scope and the two startup paths | Every session |
+| `docs/1_<PROJECT>.md` | The project index: docs, features, milestones, prerequisites, variables, SESSION_FILES, layout | Every session |
+| `docs/2_INSTRUCTIONS.md` | What to do, how, done when | Every session |
 | `docs/3`–`6` | Conventions, tests, decisions, TODOs; a doc exists only once it has content | When the index says |
-| `docs/<Feature>/` | A feature's index `1.<FEATURE>.md`, plus numbered docs that add to the root's | Via the index, or `.claude/rules/<Feature>.md` |
-| `CLAUDE.md` | `@AGENTS.md` | Every session |
-| `.claude/skills/agent-docs/` | How to edit, start and check the docs; feature templates | On a docs change |
+| `docs/<Feature>/` | A feature's index `1_<FEATURE>.md`, plus numbered docs that add to the root's | When code or tests match paths in the Features table |
+| `CLAUDE.md` | Imports AGENTS.md and its two startup files | Claude Code sessions |
+| `.agents/skills/agent-docs/` | How to edit, start and check the docs, with feature templates | On a docs change |
+| `.claude/skills/agent-docs/SKILL.md` | Optional local junction to the shared skill | On a docs change in Claude Code |
 | `Tools/ue.py`, `Tools/python.cmd` | The engine commands, run with the engine's Python, which `python.cmd` finds from the `.uproject` | Per command |
 | `.claude/settings.json` | The `clangd-lsp` and `rider-skills` plugins, and deny rules | At launch |
 | `.claude/settings.local.json` | Your saved approvals, and any variable you override; not committed | At launch, for you |
@@ -25,14 +26,14 @@ becomes an instruction. Why the template is built this way is in the AgentsTempl
 
 ## Permission prompts
 
-Commands prompt as usual. "Yes, and don't ask again" saves the approval in your `.claude/settings.local.json`, for
+Each agent applies its own sandbox and approval settings. In Claude Code, "Yes, and don't ask again" saves the approval in your `.claude/settings.local.json`, for
 you alone. Commands call `Tools/python.cmd` by its fixed path because Claude Code can't save an approval for a
 command whose program is a variable, such as `& "$env:UE_ENGINE_DIR\..."`. A `claude -p` run can't prompt: pass the
 commands it may run with `--allowedTools`.
 
 ## The gate
 
-A task or command 2.INSTRUCTIONS doesn't cover makes the agent stop and propose the lines; it continues once you
+A task or command 2_INSTRUCTIONS doesn't cover makes the agent stop and propose the lines; it continues once you
 approve them. With no user, as in CI, it ends its turn with the question. Expect this often at first, and review
 every proposed line: that file decides what agents do. Lint, running the game and Perforce's SESSION_FILES start
 *not set up yet*. Other tests and lint are Ask first; only the test-first test runs unasked.
@@ -44,46 +45,47 @@ a conflict makes the agent stop. Features don't nest; one that needs its own bui
 
 ## Work repositories
 
-Ask: "add the work repositories ChildA and ChildB". Then always start in the parent:
+Ask the agent to add the work repositories ChildA and ChildB. Start in the parent for work across repositories.
+Codex reads each child's AGENTS.md and startup docs before working there. For work confined to one child, open a
+session in that child. In Claude Code, use the following launch command to load the child agents.
 
 ```powershell
 claude --add-dir ChildA --add-dir ChildB
 ```
 
-- The parent delegates to each repository's agent; each adds about 200 lines to every parent session.
-- Permissions, hooks and `env` come only from where you start: set any override in the parent's local settings.
+- When a repository agent is available, the parent can delegate the child's scope to it.
+- In Claude Code, permissions, hooks and `env` come from where you start. Set local overrides there.
 - Each finds its own engine through its own `.uproject`; a `UE_ENGINE_DIR` set in the parent applies to all of them.
 
 ## Settings
 
 | What | Where |
 | --- | --- |
-| Plugins, deny rules, anything everyone needs | `.claude/settings.json` |
-| Overrides, only when the defaults miss: `UE_ENGINE_DIR` (else the `.uproject`'s `EngineAssociation`, from the registry), `UE_PROJECT_FILE`, `UE_EDITOR_TARGET` | `.claude/settings.local.json`, under `env` |
+| Claude Code plugins and deny rules | `.claude/settings.json` |
+| Engine discovery overrides (`UE_ENGINE_DIR`, `UE_PROJECT_FILE`, `UE_EDITOR_TARGET`) | Environment of the agent process. Claude Code also supports `env` in `.claude/settings.local.json` |
 | Personal notes for Claude | `CLAUDE.local.md`, not committed |
 
-- **Deny rules** block `cd` and its aliases, so a session never leaves its folder. Claude Code 2.1.272 warns that
+- **Claude Code deny rules** block `cd` and its aliases. Claude Code 2.1.272 warns that
   the `Cd` rule is unknown; newer versions use it.
 - **Stop Claude committing:** add `"PowerShell(git commit*)", "PowerShell(git -C * commit*)"` and the same two as
   `Bash(...)` to `permissions.deny`.
-- **Rider:** each developer enables Rider's MCP server once (Settings → AI → MCP Server, then Auto-Configure for
-  Claude Code), with the solution open. The `rider-skills` plugin comes from `.claude/settings.json`: accept it when
+- **Rider:** open the solution, enable Rider's MCP server and connect it to your agent. Claude Code offers auto-configuration
+  in Rider's Settings → AI → MCP Server. The `rider-skills` plugin comes from `.claude/settings.json`: accept it when
   Claude Code offers it. Its UE skills look for the `.uproject` in the folder Claude Code starts in.
-- **Code intelligence without Rider:** `clangd` on `PATH` (`winget install LLVM.LLVM`) plus the C++ database. It works when a
-  `Found N new diagnostic issues` line follows an edit; otherwise see `/plugin`, Errors.
+- **Code intelligence without Rider:** use an available language server with the C++ database. Claude Code's
+  `clangd-lsp` integration needs `clangd` on `PATH`; its `/plugin` Errors tab lists startup failures.
 - **Personal plugins** that block a built-in tool break rows naming it: make the plugin a team standard, or keep
   the rows free of tool names.
 
 ## Routine
 
-- **Docs drift:** ask Claude to update the docs for what changed, or to check them; review the edits.
-- **Check what loaded:** `/memory`, `/context`, `/doctor prompt-audit`. Never run `/init`: it breaks `CLAUDE.md`.
-- **Update the template:** replace the template-owned files with the newer copies:
-  `.claude/skills/agent-docs/`, `Tools/python.cmd` and `Tools/ue.py`.
-- **Add** a plugin, skill or engine command with its row in 2.INSTRUCTIONS; a variable with its row in the index.
-- **Other agents:** for Codex, add `.agents/skills/agent-docs/SKILL.md` with the same frontmatter and a body pointing
-  to Claude's copy. For Gemini CLI, `.gemini/settings.json` with `{ "context": { "fileName": ["AGENTS.md"] } }`.
-  Either needs its own permission setup and shell variables.
+- **Docs drift:** ask your agent to check or update the docs, then review the edits.
+- **Check startup:** ask the agent to identify its project index and the project's test command. In Claude Code
+  you can also inspect `/memory`, `/context` or `/doctor prompt-audit`.
+- **Update the template:** replace the shared `.agents/skills/agent-docs/` skill, `Tools/Link-AgentSkills.ps1`,
+  `Tools/python.cmd` and `Tools/ue.py` with the newer copies.
+- **Add** a plugin, skill or engine command with its row in 2_INSTRUCTIONS; a variable with its row in the index.
+- **Other agents:** point their instruction entry point at AGENTS.md and let them read the shared skill by path.
 
 ## Notes
 

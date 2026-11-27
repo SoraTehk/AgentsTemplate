@@ -1,4 +1,4 @@
-# 1. {{PROJECT_NAME}}
+# 1_{{PROJECT_NAME}}
 
 ## What and why
 
@@ -8,22 +8,23 @@
 
 ## Docs
 
-This file is the project index; AGENTS.md loads it and the instructions every session. Read the other docs your task
-needs, by "Read when".
+AGENTS.md directs each session here and to the instructions. Read the other docs your task needs by "Read when".
 
 | Doc | Holds | Read when |
 | --- | --- | --- |
-| [2.INSTRUCTIONS](2.INSTRUCTIONS.md) | What to do for each task or action, and how: commands, tools, procedures | Every session |
-| [3.CONVENTIONS](3.CONVENTIONS.md) | What code looks like: coding standard, vocabulary, architecture, contracts | Before writing or reviewing code |
-| [4.TEST](4.TEST.md) | How tests are written: framework, where they live, naming | Before changing behaviour |
-| [5.DECISIONS](5.DECISIONS.md) | Why things are the way they are | Before reversing a choice or changing architecture |
+| [2_INSTRUCTIONS](2_INSTRUCTIONS.md) | What to do for each task or action, and how: commands, tools, procedures | Every session |
+| [3_CONVENTIONS](3_CONVENTIONS.md) | What code looks like: coding standard, vocabulary, architecture, contracts | Before writing or reviewing code |
+| [4_TEST](4_TEST.md) | How tests are written: framework, where they live, naming | Before changing behaviour |
+| [5_DECISIONS](5_DECISIONS.md) | Why things are the way they are | Before reversing a choice or changing architecture |
+
 ### Features
 
-A feature's docs live in `docs/<Feature>/`, and its index, `1.<FEATURE>.md`, is built like this file. Its other
+A feature's docs live in `docs/<Feature>/`, and its index, `1_<FEATURE>.md`, is built like this file. Its other
 numbered docs add to the root doc with the same number. **Never** pick one side of a conflict between the two: it is
 two instructions conflicting, so the gate applies.
 
-None yet.
+| Feature | Index | Code | Tests |
+| --- | --- | --- | --- |
 
 ## Milestones
 
@@ -39,14 +40,14 @@ None yet.
 | --- | --- | --- |
 | Unreal Engine | *not set up yet*: the one the `.uproject`'s `EngineAssociation` names, registered on the machine (a launcher install, or a source build registered with UnrealVersionSelector) | Builds, runs and tests the project, and its Python runs our scripts |
 | MSVC toolset and Windows SDK | *not set up yet*: the ones that engine version asks for | Unreal Build Tool compiles with them; a wrong toolset fails the Build in its first seconds |
-| JetBrains Rider | Any with an MCP server, enabled in Settings → AI → MCP Server, with Auto-Configure for Claude Code, and the solution open | The `rider-skills` plugin's skills work through it; without it they fall back to file tools and search |
-| clangd | *not set up yet* | The `LSP` tool's language server for C++, used when Rider's MCP server isn't there; without it on `PATH`, the `/plugin` Errors tab shows `Executable not found in $PATH` |
+| JetBrains Rider (optional) | A version with an MCP server, connected to your agent with the solution open | Symbol lookup, diagnostics and refactoring |
+| clangd (optional) | A version supported by your agent's language-server integration | C++ symbol lookup using the project's compilation database |
 
 ## Variables
 
 None is needed: our scripts find the engine the way Unreal's own tools do, from the `.uproject`'s `EngineAssociation`
-in the registry. A machine sets one only to override that, in `.claude/settings.local.json` under `env` (personal,
-never shared). When our scripts find no engine they say so: tell the user to register it or set `UE_ENGINE_DIR`.
+in the registry. Set an override in the environment that launches your agent. If the scripts cannot find an
+engine, ask the user to register it or set `UE_ENGINE_DIR`.
 
 | Variable | Holds | Example |
 | --- | --- | --- |
@@ -70,5 +71,6 @@ Config/                    Default*.ini
 Content/                   assets, changed only through the editor
 Tools/                     our own scripts, in Python, run through Tools/python.cmd
 docs/                      agent docs; start at AGENTS.md
-.claude/                   Claude Code settings, agents, rules and skills
+.agents/skills/            shared agent skills
+.claude/                   Claude Code settings and adapters
 ```

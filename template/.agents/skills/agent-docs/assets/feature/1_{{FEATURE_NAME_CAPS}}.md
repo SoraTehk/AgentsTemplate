@@ -1,4 +1,4 @@
-# 1. {{FEATURE_NAME}}
+# 1_{{FEATURE_NAME}}
 
 {{One sentence: what this feature does for the player or the team.}}
 
